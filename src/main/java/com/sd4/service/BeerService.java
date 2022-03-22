@@ -8,6 +8,7 @@ package com.sd4.service;
 import com.sd4.model.Beer;
 import com.sd4.repository.BeerRepository;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,8 +45,9 @@ public class BeerService {
         return beerRepo.count();
     }
     
-    public void saveBeer(Beer b) {
-        beerRepo.save(b);
+    public Beer saveBeer(Beer b) {
+        b.setLast_mod(new Date());
+        return beerRepo.save(b);
     }  
 
 

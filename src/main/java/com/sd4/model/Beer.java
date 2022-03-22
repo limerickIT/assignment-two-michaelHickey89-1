@@ -32,7 +32,7 @@ public class Beer extends RepresentationModel<Beer> implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    private Long id;
     
     
     private long brewery_id;

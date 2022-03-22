@@ -7,23 +7,13 @@ package com.sd4.controller;
 
 import com.sd4.model.Beer;
 import com.sd4.service.BeerService;
-import static io.grpc.Context.key;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import static okhttp3.Cache.key;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,13 +25,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.client.RestTemplate;
-
-
 
 /**
  *
@@ -51,98 +36,91 @@ import org.springframework.web.client.RestTemplate;
 @RequestMapping("/beer")
 
 public class BeerController {
-    
-  
-    
-      @Autowired
+
+    @Autowired
     private BeerService beerService;
-      
-       @GetMapping("/")
-    Page<Beer> getAll(@RequestParam int pageSize,@RequestParam int pageNumber) {
-        Page<Beer> alist = beerService.findAlls(pageNumber,pageSize);
-        
+
+    @GetMapping("")
+    Page<Beer> getAll(@RequestParam int pageSize, @RequestParam int pageNumber) {
+        Page<Beer> alist = beerService.findAlls(pageNumber, pageSize);
+
 //        if(alist.isEmpty()){
 //            return new ResponseEntity(HttpStatus.NOT_FOUND);
 //        }
 //        else
-            return beerService.findAlls(pageNumber, pageSize);
+        return beerService.findAlls(pageNumber, pageSize);
     }
-      
-       @GetMapping(value = "/{id}")
+
+    @GetMapping(value = "/{id}")
     public ResponseEntity<Beer> getOne(@PathVariable long id) {
-       Optional<Beer> o =  beerService.findOne(id);
-       
-       if (!o.isPresent()) 
+        Optional<Beer> optional = beerService.findOne(id);
+
+        if (!optional.isPresent()) {
             return new ResponseEntity(HttpStatus.NOT_FOUND);
-         else 
-            return ResponseEntity.ok(o.get());
+        } else {
+            return ResponseEntity.ok(optional.get());
+        }
     }
-      
-      @PutMapping("/{id}")
-    public ResponseEntity edit(@RequestBody Beer b) { //the edit method should check if the Author object is already in the DB before attempting to save it.
-        beerService.saveBeer(b);
-        return new ResponseEntity(HttpStatus.OK);
+
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity edit(@PathVariable("id") long id, @RequestBody Beer beer) { //the edit method should check if the Author object is already in the DB before attempting to save it.
+        if (id != beer.getId()) {
+            return ResponseEntity.badRequest().build();
+        }
+        beer = beerService.saveBeer(beer);
+        return ResponseEntity.ok(beer);
     }
-    
-    @PostMapping("/add")
-    public ResponseEntity add(@RequestBody Beer a) {
-        beerService.saveBeer(a);
-        return new ResponseEntity(HttpStatus.CREATED);
+
+    @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Beer> add(@RequestBody Beer newBeer) {
+        Beer beer = beerService.saveBeer(newBeer);
+        return ResponseEntity.ok(beer);
     }
-    
-     @DeleteMapping("/{id}")
+
+    @DeleteMapping("/{id}")
     public ResponseEntity delete(@PathVariable long id) {
+        Optional<Beer> optional = beerService.findOne(id);
+
+        if (!optional.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
         beerService.deleteByID(id);
-        return new ResponseEntity(HttpStatus.OK);
+        return ResponseEntity.ok(optional.get());
     }
-    
- 
-      
-    @GetMapping(value ="/getBeer/{id}", produces=MediaTypes.HAL_JSON_VALUE)  
-    public ResponseEntity<Beer> getBeerWithHateoas(@PathVariable long id){
+
+    @GetMapping(value = "/getBeer/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+    public ResponseEntity<Beer> getBeerWithHateoas(@PathVariable long id) {
         Optional<Beer> b = beerService.findOne(id);
-        if (!b.isPresent()){
+        if (!b.isPresent()) {
             return new ResponseEntity(HttpStatus.NOT_FOUND);
+        } else {
+
+            Link link = linkTo(methodOn(BeerController.class).getAllBeerWithHateoas()).withSelfRel();
+
+            b.get().add(link);
+            return ResponseEntity.ok(b.get());
         }
-        else{
-               
-                
-                Link link = linkTo(methodOn(BeerController.class).getAllBeerWithHateoas()).withSelfRel();
-                
-          
-               b.get().add(link);
-               return ResponseEntity.ok(b.get());
-        }
-    }  
-    
-    @GetMapping(value ="/allbeers/", produces=MediaTypes.HAL_JSON_VALUE)  
-    public CollectionModel<Beer> getAllBeerWithHateoas(){
-      List<Beer> alist = beerService.findAll();
-      
-      for(final Beer b : alist){
-          long id = b.getId();
-         
-          Link link = linkTo(methodOn(BeerController.class).getBeerWithHateoas(id)).withSelfRel();
-        
-          b.add(link);
-      }
-          
-           CollectionModel<Beer> result = CollectionModel.of(alist);
-           return result;
-     
     }
-    
 
+    @GetMapping(value = "/allbeers/", produces = MediaTypes.HAL_JSON_VALUE)
+    public CollectionModel<Beer> getAllBeerWithHateoas() {
+        List<Beer> alist = beerService.findAll();
 
-   
-    
-    
-     
-    
-    
+        for (final Beer b : alist) {
+            long id = b.getId();
 
-   
+            Link selfLink = linkTo(methodOn(BeerController.class).getBeerWithHateoas(id)).withSelfRel();
 
-   
-    
+            b.add(selfLink);
+            
+             Link moreDetails = linkTo(methodOn(BeerController.class).getBeerWithHateoas(id)).withSelfRel();
+
+            b.add(moreDetails);
+        }
+        Link listLink = linkTo(methodOn(BeerController.class).getAllBeerWithHateoas()).withSelfRel();
+        CollectionModel<Beer> result = CollectionModel.of(alist,listLink);
+        return result;
+
+    }
+
 }
