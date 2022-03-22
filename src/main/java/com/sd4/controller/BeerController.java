@@ -7,9 +7,14 @@ package com.sd4.controller;
 
 import com.sd4.model.Beer;
 import com.sd4.service.BeerService;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
+import javax.imageio.ImageIO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.Link;
@@ -52,7 +57,7 @@ public class BeerController {
     }
 
     @GetMapping(value = "/{id}")
-    public ResponseEntity<Beer> getOne(@PathVariable long id) {
+    public ResponseEntity<Beer> getOne(@PathVariable("id") long id) {
         Optional<Beer> optional = beerService.findOne(id);
 
         if (!optional.isPresent()) {
@@ -60,6 +65,26 @@ public class BeerController {
         } else {
             return ResponseEntity.ok(optional.get());
         }
+    }
+
+    @GetMapping(value = "/image/{id}/{imageType}")
+    /**
+     * imageType must = thumb or large
+     */
+    public ResponseEntity<BufferedImage> getImage(@PathVariable("id") long id, @PathVariable("imageType") String imageType) throws IOException {
+        Optional<Beer> optional = beerService.findOne(id);
+
+        if (!optional.isPresent()) {
+            return new ResponseEntity(HttpStatus.NOT_FOUND);
+        }
+        String type = "large".equalsIgnoreCase(imageType) ? "large" : "thumbs";
+        
+        String path = "static/assets/images/" + type + "/" + optional.get().getImage();
+        System.out.println(path);
+        InputStream inputStream = new ClassPathResource(path).getInputStream();
+        BufferedImage bufferedImage = ImageIO.read(inputStream);
+        return ResponseEntity.ok(bufferedImage);
+
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -112,13 +137,13 @@ public class BeerController {
             Link selfLink = linkTo(methodOn(BeerController.class).getBeerWithHateoas(id)).withSelfRel();
 
             b.add(selfLink);
-            
-             Link moreDetails = linkTo(methodOn(BeerController.class).getBeerWithHateoas(id)).withSelfRel();
+
+            Link moreDetails = linkTo(methodOn(BeerController.class).getBeerWithHateoas(id)).withSelfRel();
 
             b.add(moreDetails);
         }
         Link listLink = linkTo(methodOn(BeerController.class).getAllBeerWithHateoas()).withSelfRel();
-        CollectionModel<Beer> result = CollectionModel.of(alist,listLink);
+        CollectionModel<Beer> result = CollectionModel.of(alist, listLink);
         return result;
 
     }
