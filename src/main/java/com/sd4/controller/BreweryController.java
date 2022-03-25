@@ -55,11 +55,19 @@ public class BreweryController {
             return ResponseEntity.ok(o.get());
     }
     
-    @GetMapping(value = "/map", produces = MediaType.TEXT_HTML_VALUE)
-    public String getMap(){
-        return "<html><iframe src=\"https://docs.google.com/spreadsheets/d/e/2PACX-1vTNs4h_lJI0kbyje6ter7l4yvbHOUH2BXyjDW4xrwjJqdypJS8cGY96-fwQcSDIvPI0rUiT6A2Ntzph/pubchart?oid=314131014&format=interactive\"width=\"38%\" height=\"475px\"></iframe></html>";
+    @GetMapping(value = "/{id}/map")
+    public String getMap(@PathVariable long id){
         
-    }
+       Optional<Brewery> o =  breweryService.findOne(id);
+       String name = o.get().getName();
+       String address = o.get().getAddress1();
+       String address2 = o.get().getAddress2();
+       String city = o.get().getCity();
+       String country = o.get().getCountry();
+       String code = o.get().getCode();
+        
+        return "<html><body><h2>" + name + address + address2 + city +"</h2><iframe width=\"600\" height=\"500\" id=\"gmap_canvas\" src=\"https://maps.google.com/maps?q="+ name+address+address2+city+code+country+ "=&output=embed\" frameborder=\"0\" scrolling=\"no\" marginheight=\"0\" marginwidth=\"0\">";
+     }
     
     
 }
