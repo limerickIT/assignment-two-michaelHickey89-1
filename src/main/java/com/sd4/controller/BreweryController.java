@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,6 +55,11 @@ public class BreweryController {
             return ResponseEntity.ok(o.get());
     }
     
+    @GetMapping(value = "/map", produces = MediaType.TEXT_HTML_VALUE)
+    public String getMap(){
+        return "<html><iframe src=\"https://docs.google.com/spreadsheets/d/e/2PACX-1vTNs4h_lJI0kbyje6ter7l4yvbHOUH2BXyjDW4xrwjJqdypJS8cGY96-fwQcSDIvPI0rUiT6A2Ntzph/pubchart?oid=314131014&format=interactive\"width=\"38%\" height=\"475px\"></iframe></html>";
+        
+    }
     
     
 }

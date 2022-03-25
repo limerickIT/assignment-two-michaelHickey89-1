@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.converter.BufferedImageHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 
+
 @SpringBootApplication
 @ComponentScan({"com.sd4.service", "com.sd4.controller"})
 @EntityScan("com.sd4.model")
