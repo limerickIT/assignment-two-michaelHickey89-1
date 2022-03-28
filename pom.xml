@@ -102,6 +102,14 @@
             <version>1.4.1</version>
             <type>jar</type>
         </dependency>
+        
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>itextpdf</artifactId>
+            <version>5.5.10</version>
+        </dependency>
+        
+        
     </dependencies>
 
     <build>
