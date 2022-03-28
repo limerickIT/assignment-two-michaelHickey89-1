@@ -1,21 +1,35 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.sd4.controller;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 import com.sd4.model.Beer;
+import com.sd4.model.Brewery;
+import com.sd4.model.Category;
+import com.sd4.model.Style;
+import com.sd4.repository.CategoryRepository;
+import com.sd4.repository.StyleRepository;
 import com.sd4.service.BeerService;
+import com.sd4.service.BreweryService;
+import com.sd4.utils.AppConstants;
+import com.sd4.utils.BeerPdfBuilder;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 import javax.imageio.ImageIO;
+import net.minidev.json.JSONObject;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.Link;
@@ -31,8 +45,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
  *
@@ -46,15 +62,24 @@ public class BeerController {
     @Autowired
     private BeerService beerService;
 
-    @GetMapping("")
-    Page<Beer> getAll(@RequestParam int pageSize, @RequestParam int pageNumber) {
-        Page<Beer> alist = beerService.findAlls(pageNumber, pageSize);
+    @Autowired
+    private BreweryService breweryService;
+    
+    @Autowired
+    private CategoryRepository categoryRepository;
+    
+    @Autowired
+    private StyleRepository styleRepository;
 
-//        if(alist.isEmpty()){
-//            return new ResponseEntity(HttpStatus.NOT_FOUND);
-//        }
-//        else
-        return beerService.findAlls(pageNumber, pageSize);
+    @GetMapping
+    public Page<Beer> getAll(
+            @RequestParam(value = "pageNo", defaultValue = AppConstants.DEFAULT_PAGE_NUMBER, required = false) int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = AppConstants.DEFAULT_PAGE_SIZE, required = false) int pageSize,
+            @RequestParam(value = "sortBy", defaultValue = AppConstants.DEFAULT_SORT_BY, required = false) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = AppConstants.DEFAULT_SORT_DIRECTION, required = false) String sortDir
+    ) {
+        return beerService.getAllPosts(pageNo, pageSize, sortBy, sortDir);
+
     }
 
     @GetMapping(value = "/{id}")
@@ -68,18 +93,35 @@ public class BeerController {
         }
     }
 
+    @GetMapping(value = "/details/{id}")
+    public ResponseEntity<JSONObject> getBeerDetailsById(@PathVariable("id") long id) {
+
+        Optional<Beer> optional = beerService.findOne(id);
+
+        if (!optional.isPresent()) {
+            return new ResponseEntity(HttpStatus.NOT_FOUND);
+        } else {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("beerName", optional.get().getName());
+            jsonObject.put("beerDescription", optional.get().getDescription());
+            jsonObject.put("breweryName", breweryService.findOne(optional.get().getBrewery_id()).get().getName());
+
+            return ResponseEntity.ok(jsonObject);
+        }
+    }
+
     @GetMapping(value = "/image/{id}/{imageType}")
     /**
      * imageType must = thumb or large
      */
-    public ResponseEntity<BufferedImage> getImage(@PathVariable("id") long id, @PathVariable("imageType") String imageType) throws IOException {
+    public ResponseEntity<BufferedImage> getImage(@PathVariable("id") long id, @PathVariable(value = "imageType", required = false) String imageType) throws IOException {
         Optional<Beer> optional = beerService.findOne(id);
 
         if (!optional.isPresent()) {
             return new ResponseEntity(HttpStatus.NOT_FOUND);
         }
         String type = "large".equalsIgnoreCase(imageType) ? "large" : "thumbs";
-        
+
         String path = "static/assets/images/" + type + "/" + optional.get().getImage();
         System.out.println(path);
         InputStream inputStream = new ClassPathResource(path).getInputStream();
@@ -139,7 +181,7 @@ public class BeerController {
 
             b.add(selfLink);
 
-            Link moreDetails = linkTo(methodOn(BeerController.class).getBeerWithHateoas(id)).withSelfRel();
+            Link moreDetails = linkTo(methodOn(BeerController.class).getBeerDetailsById(id)).withRel("moreDetails");
 
             b.add(moreDetails);
         }
@@ -149,4 +191,77 @@ public class BeerController {
 
     }
 
+    @GetMapping(value = "/zip", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity<byte[]> getZippedBeerImages() throws IOException {
+        final List<Beer> beers = beerService.findAll();
+        final File zipFile = BeerService.zipBeerImages(beers);
+        try (final InputStream inputStream = new FileInputStream(zipFile)) {
+            final HttpHeaders responseHeaders = new HttpHeaders();
+            final String filename = "beer-images.zip";
+            responseHeaders.set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+
+            return new ResponseEntity(IOUtils.toByteArray(inputStream), responseHeaders, HttpStatus.OK);
+        }
+    }
+
+    @GetMapping(value = "/pdf/{beerId}", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<BeerPdfBuilder> getPdf(@PathVariable("beerId") long beerId) throws Exception {
+        final Optional<Beer> optional = beerService.findOne(beerId);
+        if (!optional.isPresent()) {
+            return new ResponseEntity(HttpStatus.NOT_FOUND);
+        }
+        final Beer beer = optional.get();
+
+        Optional<Brewery> brewery = breweryService.findOne(beer.getBrewery_id());
+        Optional<Category> category = categoryRepository.findById(beer.getCat_id());
+        Optional<Style> style = styleRepository.findById(beer.getStyle_id());
+
+        BeerPdfBuilder beerPdfPrinter = new BeerPdfBuilder(beer, brewery.get(), category.get(), style.get());
+
+        final File pdfFile = beerPdfPrinter.generatePdfReport();
+        try (final InputStream inputStream = new FileInputStream(pdfFile)) {
+            final HttpHeaders responseHeaders = new HttpHeaders();
+            final String filename = beer.getName() + ".pdf";
+            responseHeaders.set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+
+            return new ResponseEntity(IOUtils.toByteArray(inputStream), responseHeaders, HttpStatus.OK);
+        }
+    }
+
+//    @RequestMapping(value = "/pdf/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_PDF_VALUE)
+//    public ResponseEntity<InputStreamResource> downloadPDFFile(@PathVariable("id") long id)
+//            throws IOException {
+//
+//        Optional<Beer> optional = beerService.findOne(id);
+//
+//        String beerName = optional.get().getName();
+//
+//        ClassPathResource pdfFile = new ClassPathResource("/pdf/" + id);
+//        System.out.println(pdfFile);
+//
+//        return ResponseEntity
+//                .ok()
+//                .contentLength(pdfFile.contentLength())
+//                .contentType(
+//                        MediaType.parseMediaType(beerName))
+//                .body(new InputStreamResource(pdfFile.getInputStream()));
+//    }
+//    @GetMapping(value = "/QRcode",produces = MediaType.IMAGE_PNG_VALUE)
+//    public ResponseEntity<BufferedImage> QRCode(){
+//        
+//       return okResponse(BarbecueBarcodeGenerator.generateEAN13BarcodeImage(barcode));
+//}
+//    }
+//    
+//    public static BufferedImage generateQRCodeImage(String barcodeText) throws Exception {
+//    QRCodeWriter barcodeWriter = new QRCodeWriter();
+//    BitMatrix bitMatrix = barcodeWriter.encode(barcodeText, BarcodeFormat.QR_CODE, 200, 200);
+//
+//    return MatrixToImageWriter.toBufferedImage(bitMatrix);
+//}
+//    
+//     @PostMapping(value = "/zxing/qrcode", produces = MediaType.IMAGE_PNG_VALUE)
+//    public ResponseEntity<BufferedImage> zxingQRCode(@RequestBody String barcode) throws Exception {
+//        return okResponse(ZxingBarcodeGenerator.generateQRCodeImage(barcode));
+//    }
 }
