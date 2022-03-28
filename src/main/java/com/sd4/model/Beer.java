@@ -37,7 +37,7 @@ public class Beer extends RepresentationModel<Beer> implements Serializable {
     
     private long brewery_id;
     private String name;
-    private Integer cat_id;
+    private Long cat_id;
     private Integer style_id;
     private Double abv;
     private Double ibu;
@@ -53,5 +53,7 @@ public class Beer extends RepresentationModel<Beer> implements Serializable {
     private String image;
     private Double buy_price;
     private Double sell_price;
+    
+    
 
 }
