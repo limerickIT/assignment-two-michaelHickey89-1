@@ -25,5 +25,7 @@ public class AssignmentTwo2022Application {
     public HttpMessageConverter<BufferedImage> createImageHttpMessageConverter() {
         return new BufferedImageHttpMessageConverter();
     }
+    
+    
 
 }
