@@ -9,13 +9,16 @@ import com.sd4.repository.StyleRepository;
 import com.sd4.service.BeerService;
 import com.sd4.service.BreweryService;
 import com.sd4.Builder.BuildPDF;
+import com.sd4.exceptions.BeerNotFoundException;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.imageio.ImageIO;
 import net.minidev.json.JSONObject;
@@ -37,7 +40,11 @@ import org.springframework.web.bind.annotation.RestController;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  *
@@ -67,7 +74,8 @@ public class BeerController {
 
         if (!optional.isPresent()) {
             return new ResponseEntity(HttpStatus.NOT_FOUND);
-        } else {
+        }
+          else {
             return ResponseEntity.ok(optional.get());
         }
     }
@@ -136,7 +144,8 @@ public class BeerController {
     public ResponseEntity<Beer> getBeerWithHateoas(@PathVariable long id) {
         Optional<Beer> b = beerService.findOne(id);
         if (!b.isPresent()) {
-            return new ResponseEntity(HttpStatus.NOT_FOUND);
+            //return new ResponseEntity(HttpStatus.NOT_FOUND);
+            throw new BeerNotFoundException("Oops item not found");
         } else {
 
             Link link = linkTo(methodOn(BeerController.class).getAllBeerWithHateoas()).withSelfRel();
@@ -169,11 +178,11 @@ public class BeerController {
 
     @GetMapping(value = "/zip", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<byte[]> getZippedBeerImages() throws IOException {
-        final List<Beer> beers = beerService.findAll();
-        final File zipFile = BeerService.zipBeerImages(beers);
-        try (final InputStream inputStream = new FileInputStream(zipFile)) {
-            final HttpHeaders responseHeaders = new HttpHeaders();
-            final String filename = "beer-images.zip";
+        List<Beer> beers = beerService.findAll();
+        File zipFile = BeerService.zipBeerImages(beers);
+        try (InputStream inputStream = new FileInputStream(zipFile)) {
+            HttpHeaders responseHeaders = new HttpHeaders();
+            String filename = "beer-images.zip";
             responseHeaders.set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
 
             return new ResponseEntity(IOUtils.toByteArray(inputStream), responseHeaders, HttpStatus.OK);
@@ -203,5 +212,6 @@ public class BeerController {
             return new ResponseEntity(IOUtils.toByteArray(inputStream), responseHeaders, HttpStatus.OK);
         }
     }
+  
    
 }

@@ -40,8 +40,8 @@ public class BreweryService {
         breweryRepo.deleteById(authorID);
     }
 
-    public void saveBook(Brewery a) {
-        breweryRepo.save(a);
+    public Brewery saveBrewery(Brewery a) {
+       return breweryRepo.save(a);
     }  
     
 }

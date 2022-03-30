@@ -20,6 +20,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.springframework.hateoas.RepresentationModel;
 
 /**
  *
@@ -31,20 +33,41 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 @Entity
-public class Brewery implements Serializable {
+public class Brewery extends RepresentationModel<Brewery> implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+    
+    @NotEmpty(message = "name cannot be empty")
     private String name;
+    
+    @NotEmpty(message = "address1 cannot be empty")
     private String address1;
+    
+    @NotEmpty(message = "address2 cannot be empty")
     private String address2;
+    
+    @NotEmpty(message = "city cannot be empty")
     private String city;
+    
+    @NotEmpty(message = "state cannot be empty")
     private String state;
+    
+    @NotEmpty(message = "code cannot be empty")
     private String code;
+    
+    @NotEmpty(message = "country cannot be empty")
     private String country;
+    
+    @NotEmpty(message = "phone cannot be empty")
     private String phone;
+    
+    @NotEmpty(message = "website cannot be empty")
     private String website;
+    
+    @NotEmpty(message = "image cannot be empty")
     private String image;
+    
     
     @Lob
     private String description;
