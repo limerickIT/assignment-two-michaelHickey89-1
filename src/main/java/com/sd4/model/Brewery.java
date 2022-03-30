@@ -15,12 +15,15 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.validator.constraints.NotEmpty;
+
+
 import org.springframework.hateoas.RepresentationModel;
 
 /**
@@ -78,5 +81,7 @@ public class Brewery extends RepresentationModel<Brewery> implements Serializabl
     private Date last_mod;
     
     private Double credit_limit;
+    
+    @Email
     private String email;
 }

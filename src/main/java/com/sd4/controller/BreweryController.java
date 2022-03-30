@@ -5,6 +5,7 @@
  */
 package com.sd4.controller;
 
+import com.sd4.exceptions.BeerNotFoundException;
 import com.sd4.model.Beer;
 import com.sd4.model.Brewery;
 import com.sd4.service.BreweryService;
@@ -45,7 +46,7 @@ public class BreweryController {
         List<Brewery> alist = breweryService.findAll();
 
         if (alist.isEmpty()) {
-            return new ResponseEntity(HttpStatus.NOT_FOUND);
+          throw new BeerNotFoundException("Oops item not found");
         } else {
             return ResponseEntity.ok(alist);
         }
@@ -57,7 +58,7 @@ public class BreweryController {
         Optional<Brewery> o = breweryService.findOne(id);
 
         if (!o.isPresent()) {
-            return new ResponseEntity(HttpStatus.NOT_FOUND);
+            throw new BeerNotFoundException("Oops item not found");
         } else {
             return ResponseEntity.ok(o.get());
         }
@@ -66,7 +67,7 @@ public class BreweryController {
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity edit(@PathVariable("id") long id, @RequestBody Brewery brewery) { //the edit method should check if the Author object is already in the DB before attempting to save it.
         if (id != brewery.getId()) {
-            return ResponseEntity.badRequest().build();
+           throw new BeerNotFoundException("Oops item not found");
         }
         brewery = breweryService.saveBrewery(brewery);
         return ResponseEntity.ok(brewery);
@@ -83,7 +84,7 @@ public class BreweryController {
         Optional<Brewery> optional = breweryService.findOne(id);
 
         if (!optional.isPresent()) {
-            return ResponseEntity.notFound().build();
+           throw new BeerNotFoundException("Oops item not found");
         }
         breweryService.deleteByID(id);
         return ResponseEntity.ok(optional.get());
@@ -118,7 +119,7 @@ public class BreweryController {
     public ResponseEntity<BufferedImage> generateQRCode(@PathVariable("id") long breweryId) throws Exception {
         Optional<Brewery> optional = breweryService.findOne(breweryId);
         if (!optional.isPresent()) {
-            return new ResponseEntity(HttpStatus.NOT_FOUND);
+            throw new BeerNotFoundException("Oops item not found");
         }
          Brewery brewery = optional.get();
          VCard vCard = getVCard(brewery);

@@ -5,7 +5,9 @@
  */
 package com.sd4.controller;
 
+
 import com.sd4.exceptions.BeerNotFoundException;
+import java.io.IOException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import javax.servlet.http.HttpServletRequest;
@@ -25,13 +27,14 @@ import org.springframework.web.servlet.ModelAndView;
 @ControllerAdvice
 public class ExceptionController {
     
-    @ExceptionHandler(value =BeerNotFoundException.class)
+    @ExceptionHandler(BeerNotFoundException.class)
     public ResponseEntity<String> handleException(RuntimeException ex, WebRequest req){
         String message = "A " + ex + " error has occured ";
         System.out.println(message);
         return new ResponseEntity(message, new HttpHeaders(), HttpStatus.NOT_FOUND);
     }
     
+   
 
     
     

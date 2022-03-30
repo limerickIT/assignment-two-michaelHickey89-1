@@ -12,7 +12,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  *
  * @author mickh
  */
-@ResponseStatus(value=HttpStatus.NOT_FOUND, reason = "Item not found")
+
+@ResponseStatus(value=HttpStatus.BAD_REQUEST, reason = "Bad request")
 public class BeerNotFoundException extends RuntimeException{
     
     public BeerNotFoundException(String message){

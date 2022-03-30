@@ -73,7 +73,7 @@ public class BeerController {
         Optional<Beer> optional = beerService.findOne(id);
 
         if (!optional.isPresent()) {
-            return new ResponseEntity(HttpStatus.NOT_FOUND);
+            throw new BeerNotFoundException("Oops item not found");
         }
           else {
             return ResponseEntity.ok(optional.get());
@@ -86,7 +86,7 @@ public class BeerController {
         Optional<Beer> optional = beerService.findOne(id);
 
         if (!optional.isPresent()) {
-            return new ResponseEntity(HttpStatus.NOT_FOUND);
+           throw new BeerNotFoundException("Oops item not found");
         } else {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("beerName", optional.get().getName());
@@ -102,7 +102,7 @@ public class BeerController {
         Optional<Beer> optional = beerService.findOne(id);
 
         if (!optional.isPresent()) {
-            return new ResponseEntity(HttpStatus.NOT_FOUND);
+            throw new BeerNotFoundException("Oops item not found");
         }
         String type = "large".equalsIgnoreCase(imageType) ? "large" : "thumbs";
 
@@ -134,7 +134,7 @@ public class BeerController {
         Optional<Beer> optional = beerService.findOne(id);
 
         if (!optional.isPresent()) {
-            return ResponseEntity.notFound().build();
+           throw new BeerNotFoundException("Oops item not found");
         }
         beerService.deleteByID(id);
         return ResponseEntity.ok(optional.get());
@@ -193,7 +193,7 @@ public class BeerController {
     public ResponseEntity<BuildPDF> getPdf(@PathVariable("id") long id) throws Exception {
         Optional<Beer> optional = beerService.findOne(id);
         if (!optional.isPresent()) {
-            return new ResponseEntity(HttpStatus.NOT_FOUND);
+           throw new BeerNotFoundException("Oops item not found");
         }
         
 

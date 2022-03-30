@@ -4,6 +4,7 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
+import com.itextpdf.text.Image;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.sd4.model.Beer;
@@ -48,6 +49,7 @@ public class BuildPDF {
         Paragraph p1 = new Paragraph();
         String sell = beer.getSell_price().toString();
         String avb = beer.getAbv().toString();
+        
 
         p1.add(new Paragraph(beer.getName(), COURIER));
         p1.add(new Paragraph("Description : " + beer.getDescription(), COURIER));
@@ -69,7 +71,7 @@ public class BuildPDF {
 
         p1.add(new Paragraph(" "));
         p1.add(new Paragraph("Style : " + style.getStyle_name(), COURIER));
-
+       
         p1.setAlignment(Element.ALIGN_CENTER);
 
         document.add(p1);
