@@ -16,9 +16,7 @@ import java.io.FileInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import javax.imageio.ImageIO;
 import net.minidev.json.JSONObject;
@@ -40,11 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  *
@@ -68,19 +62,9 @@ public class BeerController {
     private StyleRepository styleRepository;
 
 
-    @GetMapping(value = "/{id}")
-    public ResponseEntity<Beer> getOne(@PathVariable("id") long id) {
-        Optional<Beer> optional = beerService.findOne(id);
 
-        if (!optional.isPresent()) {
-            throw new BeerNotFoundException("Oops item not found");
-        }
-          else {
-            return ResponseEntity.ok(optional.get());
-        }
-    }
 
-    @GetMapping(value = "/details/{id}")
+    @GetMapping(value = "/details/{id}",produces = MediaTypes.HAL_JSON_VALUE)
     public ResponseEntity<JSONObject> getBeerDetailsById(@PathVariable("id") long id) {
 
         Optional<Beer> optional = beerService.findOne(id);
@@ -92,6 +76,8 @@ public class BeerController {
             jsonObject.put("beerName", optional.get().getName());
             jsonObject.put("beerDescription", optional.get().getDescription());
             jsonObject.put("breweryName", breweryService.findOne(optional.get().getBrewery_id()).get().getName());
+            
+            
 
             return ResponseEntity.ok(jsonObject);
         }
@@ -140,7 +126,7 @@ public class BeerController {
         return ResponseEntity.ok(optional.get());
     }
 
-    @GetMapping(value = "/getBeer/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+    @GetMapping(value = "/beer/{id}", produces = MediaTypes.HAL_JSON_VALUE)
     public ResponseEntity<Beer> getBeerWithHateoas(@PathVariable long id) {
         Optional<Beer> b = beerService.findOne(id);
         if (!b.isPresent()) {
@@ -155,7 +141,7 @@ public class BeerController {
         }
     }
 
-    @GetMapping(value = "/allbeers/", produces = MediaTypes.HAL_JSON_VALUE)
+    @GetMapping(value = "/allBeers", produces = MediaTypes.HAL_JSON_VALUE)
     public CollectionModel<Beer> getAllBeerWithHateoas() {
         List<Beer> alist = beerService.findAll();
 
@@ -208,9 +194,12 @@ public class BeerController {
             HttpHeaders responseHeaders = new HttpHeaders();
             String filename = optional.get().getName() + ".pdf";
             responseHeaders.set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
-
+             
+         
             return new ResponseEntity(IOUtils.toByteArray(inputStream), responseHeaders, HttpStatus.OK);
         }
+        
+        
     }
   
    

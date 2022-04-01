@@ -18,6 +18,9 @@ import javax.imageio.ImageIO;
 import net.glxn.qrgen.core.vcard.VCard;
 import net.glxn.qrgen.javase.QRCode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +32,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 /**
  *
@@ -41,27 +45,43 @@ public class BreweryController {
     @Autowired
     private BreweryService breweryService;
 
-    @GetMapping("")
-    public ResponseEntity<List<Brewery>> getAll() {
-        List<Brewery> alist = breweryService.findAll();
-
-        if (alist.isEmpty()) {
-          throw new BeerNotFoundException("Oops item not found");
-        } else {
-            return ResponseEntity.ok(alist);
-        }
-    }
-
-    @GetMapping(value = "/{id}")
-    public ResponseEntity<Brewery> getOne(@PathVariable long id) {
-        
-        Optional<Brewery> o = breweryService.findOne(id);
-
-        if (!o.isPresent()) {
+ 
+    
+     @GetMapping(value = "/brewery/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+    public ResponseEntity<Brewery> getBreweryWithHateoas(@PathVariable long id) throws Exception  {
+        Optional<Brewery> b = breweryService.findOne(id);
+        if (!b.isPresent()) {
+            //return new ResponseEntity(HttpStatus.NOT_FOUND);
             throw new BeerNotFoundException("Oops item not found");
         } else {
-            return ResponseEntity.ok(o.get());
+
+            Link link = linkTo(methodOn(BreweryController.class).getAllBreweryWithHateoas()).withSelfRel();
+
+            b.get().add(link);
+            return ResponseEntity.ok(b.get());
         }
+    }
+    
+     @GetMapping(value = "/allBrewery/", produces = MediaTypes.HAL_JSON_VALUE)
+    public CollectionModel<Brewery> getAllBreweryWithHateoas() throws Exception  {
+        List<Brewery> alist = breweryService.findAll();
+
+        for (final Brewery b : alist) {
+            long id = b.getId();
+
+            Link selfLink = linkTo(methodOn(BreweryController.class).getBreweryWithHateoas(id)).withSelfRel();
+            Link link = linkTo(methodOn(BreweryController.class).generateQRCode(id)).withRel("QRcode");
+         
+
+            
+            b.add(selfLink);
+            b.add(link);
+         
+        }
+      
+        CollectionModel<Brewery> result = CollectionModel.of(alist);
+        return result;
+
     }
     
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -90,7 +110,7 @@ public class BreweryController {
         return ResponseEntity.ok(optional.get());
     }
 
-    @GetMapping(value = "/{id}/map")
+    @GetMapping(value = "/map/{id}")
     public String getMap(@PathVariable long id) {
 
         Optional<Brewery> o = breweryService.findOne(id);
