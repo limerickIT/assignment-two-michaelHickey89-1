@@ -12,9 +12,12 @@ import com.sd4.service.BreweryService;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.imageio.ImageIO;
+import javax.validation.Valid;
 import net.glxn.qrgen.core.vcard.VCard;
 import net.glxn.qrgen.javase.QRCode;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +36,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  *
@@ -47,7 +54,7 @@ public class BreweryController {
 
  
     
-     @GetMapping(value = "/brewery/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+     @GetMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
     public ResponseEntity<Brewery> getBreweryWithHateoas(@PathVariable long id) throws Exception  {
         Optional<Brewery> b = breweryService.findOne(id);
         if (!b.isPresent()) {
@@ -62,7 +69,7 @@ public class BreweryController {
         }
     }
     
-     @GetMapping(value = "/allBrewery/", produces = MediaTypes.HAL_JSON_VALUE)
+     @GetMapping(value = "", produces = MediaTypes.HAL_JSON_VALUE)
     public CollectionModel<Brewery> getAllBreweryWithHateoas() throws Exception  {
         List<Brewery> alist = breweryService.findAll();
 
@@ -85,7 +92,7 @@ public class BreweryController {
     }
     
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity edit(@PathVariable("id") long id, @RequestBody Brewery brewery) { //the edit method should check if the Author object is already in the DB before attempting to save it.
+    public ResponseEntity edit(@PathVariable("id") long id, @Valid @RequestBody Brewery brewery) { //the edit method should check if the Author object is already in the DB before attempting to save it.
         if (id != brewery.getId()) {
            throw new BeerNotFoundException("Oops item not found");
         }
@@ -94,7 +101,7 @@ public class BreweryController {
     }
 
      @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Brewery> add(@RequestBody Brewery newBrewery) {
+    public ResponseEntity<Brewery> add(@Valid @RequestBody Brewery newBrewery) {
         Brewery b = breweryService.saveBrewery(newBrewery);
         return ResponseEntity.ok(b);
     }
@@ -147,6 +154,19 @@ public class BreweryController {
             BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(stream.toByteArray()));
             return ResponseEntity.ok(bufferedImage);
         }
+    }
+    
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Map<String, String> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+        return errors;
     }
 
 }

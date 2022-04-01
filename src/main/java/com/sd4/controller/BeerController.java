@@ -16,9 +16,12 @@ import java.io.FileInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.imageio.ImageIO;
+import javax.validation.Valid;
 import net.minidev.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,14 +41,18 @@ import org.springframework.web.bind.annotation.RestController;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  *
  * @author mickh
  */
 @RestController
-@RequestMapping("/beer")
+@RequestMapping("/beers")
 
 public class BeerController {
 
@@ -101,7 +108,7 @@ public class BeerController {
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity edit(@PathVariable("id") long id, @RequestBody Beer beer) { //the edit method should check if the Author object is already in the DB before attempting to save it.
+    public ResponseEntity edit(@Valid @PathVariable("id") long id, @RequestBody Beer beer) { //the edit method should check if the Author object is already in the DB before attempting to save it.
         if (id != beer.getId()) {
             return ResponseEntity.badRequest().build();
         }
@@ -110,7 +117,7 @@ public class BeerController {
     }
 
     @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Beer> add(@RequestBody Beer newBeer) {
+    public ResponseEntity<Beer> add(@Valid @RequestBody Beer newBeer) {
         Beer beer = beerService.saveBeer(newBeer);
         return ResponseEntity.ok(beer);
     }
@@ -126,7 +133,7 @@ public class BeerController {
         return ResponseEntity.ok(optional.get());
     }
 
-    @GetMapping(value = "/beer/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+    @GetMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
     public ResponseEntity<Beer> getBeerWithHateoas(@PathVariable long id) {
         Optional<Beer> b = beerService.findOne(id);
         if (!b.isPresent()) {
@@ -141,7 +148,7 @@ public class BeerController {
         }
     }
 
-    @GetMapping(value = "/allBeers", produces = MediaTypes.HAL_JSON_VALUE)
+    @GetMapping(value = "", produces = MediaTypes.HAL_JSON_VALUE)
     public CollectionModel<Beer> getAllBeerWithHateoas() {
         List<Beer> alist = beerService.findAll();
 
@@ -200,6 +207,18 @@ public class BeerController {
         }
         
         
+    }
+     @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Map<String, String> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+        return errors;
     }
   
    

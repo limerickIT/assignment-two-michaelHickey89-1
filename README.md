@@ -3,8 +3,8 @@
 # How to run
 
 # Beer Side
-* View all Beers - GET http://localhost:8888/beer/allBeers
-* View Beer by ID - GET http://localhost:8888/beer/beer/{id}
+* View all Beers - GET http://localhost:8888/beers
+* View Beer by ID - GET http://localhost:8888/beer/{id}
 * Get Beer Details by ID - GET http://localhost:8888/beer/details/{id}
 * Return Large or Thumbnail Image - GET http://localhost:8888/beer/image/{id}/{imageType}
 * Edit a Beer - PUT  http://localhost:8888/beer/{id}
@@ -14,8 +14,8 @@
 * Download a PDF - GET  http://localhost:8888/beer/pdf/{id}
 
 # Brewery Side
-* View all Breweries - GET http://localhost:8888/brewery/allBrewery
-* View Brewery by ID - GET http://localhost:8888/brewery/brewery/{id}
+* View all Breweries - GET http://localhost:8888/brewery
+* View Brewery by ID - GET http://localhost:8888/brewery/{id}
 * Edit a Brewery - PUT  http://localhost:8888/brewery/{id}
 * Insert a Brewery - POST  http://localhost:8888/brewery
 * Delete a Brewery - DELETE  http://localhost:8888/brewery/{id}
@@ -49,4 +49,5 @@
 - Report :heavy_check_mark:
 
 * Extra
-- Handle Errors :x:
+- Handle HTTP responses :x:
+- Bean validation :heavy_check_mark:

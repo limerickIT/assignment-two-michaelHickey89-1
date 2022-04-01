@@ -16,6 +16,7 @@ import javax.persistence.Lob;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -41,22 +42,22 @@ public class Brewery extends RepresentationModel<Brewery> implements Serializabl
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     
-    @NotEmpty(message = "name cannot be empty")
+    @NotBlank(message = "name cannot be empty")
     private String name;
     
     @NotEmpty(message = "address1 cannot be empty")
     private String address1;
     
-    @NotEmpty(message = "address2 cannot be empty")
+   
     private String address2;
     
     @NotEmpty(message = "city cannot be empty")
     private String city;
     
-    @NotEmpty(message = "state cannot be empty")
+    
     private String state;
     
-    @NotEmpty(message = "code cannot be empty")
+    
     private String code;
     
     @NotEmpty(message = "country cannot be empty")
@@ -65,7 +66,7 @@ public class Brewery extends RepresentationModel<Brewery> implements Serializabl
     @NotEmpty(message = "phone cannot be empty")
     private String phone;
     
-    @NotEmpty(message = "website cannot be empty")
+    
     private String website;
     
     @NotEmpty(message = "image cannot be empty")
