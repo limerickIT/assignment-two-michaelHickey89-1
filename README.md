@@ -4,14 +4,14 @@
 
 # Beer Side
 * View all Beers - GET http://localhost:8888/beers
-* View Beer by ID - GET http://localhost:8888/beer/{id}
-* Get Beer Details by ID - GET http://localhost:8888/beer/details/{id}
-* Return Large or Thumbnail Image - GET http://localhost:8888/beer/image/{id}/{imageType}
-* Edit a Beer - PUT  http://localhost:8888/beer/{id}
-* Insert a Beer - POST  http://localhost:8888/beer
-* Delete a Beer - DELETE  http://localhost:8888/beer/{id}
-* Get Zip of Beer Images - GET  http://localhost:8888/beer/zip
-* Download a PDF - GET  http://localhost:8888/beer/pdf/{id}
+* View Beer by ID - GET http://localhost:8888/beers/{id}
+* Get Beer Details by ID - GET http://localhost:8888/beers/details/{id}
+* Return Large or Thumbnail Image - GET http://localhost:8888/beers/image/{id}/{imageType}
+* Edit a Beer - PUT  http://localhost:8888/beers/{id}
+* Insert a Beer - POST  http://localhost:8888/beers
+* Delete a Beer - DELETE  http://localhost:8888/beers/{id}
+* Get Zip of Beer Images - GET  http://localhost:8888/beerszip
+* Download a PDF - GET  http://localhost:8888/beers/pdf/{id}
 
 # Brewery Side
 * View all Breweries - GET http://localhost:8888/brewery
@@ -37,7 +37,7 @@
 - Generate QR code for a specific brewery :heavy_check_mark:
 
 * TASK 4
-- Return large or thumnail image :heavy_check_mark:
+- Return large or thumnail image :x:
 
 * TASK 5
 - Return a compressed (zipped) file containing all beer images :heavy_check_mark:
