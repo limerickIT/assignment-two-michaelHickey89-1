@@ -10,7 +10,7 @@
 * Edit a Beer - PUT  http://localhost:8888/beers/{id}
 * Insert a Beer - POST  http://localhost:8888/beers
 * Delete a Beer - DELETE  http://localhost:8888/beers/{id}
-* Get Zip of Beer Images - GET  http://localhost:8888/beerszip
+* Get Zip of Beer Images - GET  http://localhost:8888/beers/zip
 * Download a PDF - GET  http://localhost:8888/beers/pdf/{id}
 
 # Brewery Side
